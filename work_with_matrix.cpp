@@ -4,89 +4,101 @@ using namespace std;
 
 class Matrix {
 private:
-     int height=0;
-     int width=0;
+     int height;
+     int width;
     int** matrix;
 public:
-    Matrix() {
-        height = 0;
-        width = 0;
-        matrix = nullptr;
+    Matrix() : height(0), width(0), matrix(nullptr) {
+
     }
-    Matrix( int value_Height,  int value_Width) { // конструктор, в котором можно задать размер матрицы
+
+    void Delete() {
+        for (int i = 0; i < height; i++) {
+            delete[] matrix[i];
+        }
+        delete[] matrix;
+    }
+
+    void new_memory(int value_Height, int value_Width) {
+        height = value_Height;
+        width = value_Width;
+        matrix = new int* [height];
+        for (int i = 0; i < height; i++) {
+            matrix[i] = new int[width];
+        }
+
+    }
+
+    Matrix( int value_Height,  int value_Width) : height(0), width(0), matrix(nullptr) { // конструктор, в котором можно задать размер матрицы
         if (value_Height > 0 && value_Width > 0) {
-            height = value_Height;
-            width = value_Width;
-            matrix = new int* [height];
-                for (int i = 0; i < height; i++) {
-                    matrix[i] = new int[width];
-            }
-
+            new_memory(value_Height, value_Width);
         }
-        
     }
 
-    void Input() { // ввод матрицы
-            for (int i = 0; i < height; i++) {
-                for (int j = 0; j < width; j++) {
-                    cin >> matrix[i][j];
-                }
+    friend istream& operator >> (istream& input, Matrix& sourse)
+    {
+        for (int i = 0; i < sourse. GetHeight(); i++) {
+            for (int j = 0; j < sourse.GetWidth(); j++) {
+                input >> sourse.matrix[i][j];
             }
         }
-    
-    
-    void Output() { // вывод матрицы
-
-            for (int i = 0; i < height; i++) {
-                for (int j = 0; j < width; j++) {
-                    cout << matrix[i][j] << " ";
-                }
-                cout << endl;
-            }
+        return input;
     }
 
-     int GetHeight() { // получение длины матрицы
+    friend ostream& operator << (ostream& output, const Matrix& source)
+    {
+        for (int i = 0; i < source.GetHeight(); i++) {
+            for (int j = 0; j < source.GetWidth(); j++) {
+                output << source.matrix[i][j] << " ";
+            }
+            output << endl;
+        }
+        return output;
+    }
+
+
+     int GetHeight() const { // получение высоты матрицы
             return height;
     }
 
-    int GetWidth() { // получение ширины матрицы
+    int GetWidth() const{ // получение ширины матрицы
             return width;
      }
 
-    int Access_by_index_read(int i, int j) { // доступ по операции индексирования (чтение элемента)
-        if (i>=0 && j>=0 && i < height && j < width) {
-            return matrix[i][j];
+
+    int* operator[](int index) {
+        if (index < 0 || index >= height) {
+            cout << "Out of range";
+            throw out_of_range("Index out of bounds");
         }
         else {
-            return -1;
+            return matrix[index];
         }
     }
 
-    int Access_by_index_write(int i, int j, int new_value) { // доступ по операции индексирования (замена элемента)
-        if (i >= 0 && j >= 0 && i < height && j < width) {
-            matrix[i][j] = new_value;
-            return matrix[i][j];
+   const int* operator[](int index) const {
+        if (index < 0 || index >= height) {
+            cout << "Out of range";
+            throw out_of_range("Index out of bounds");
         }
         else {
-            return -1;
+            return matrix[index];
         }
     }
 
-    Matrix(const Matrix& other) //конструктор копирования
-    {
-        cout << "Calling copy constructor" << endl;
-        height = other.height;
-        width = other.width;
-        matrix =  new int * [height];
-        for (int i = 0; i < height; i++) {
-            matrix[i] =  new int[width];
-
-        }
+    void replace(const Matrix& other) {
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                matrix[i][j]= other.matrix[i][j];
+                matrix[i][j] = other.matrix[i][j];
             }
         }
+    }
+
+    Matrix(const Matrix& other) : height(0), width(0), matrix(nullptr) //конструктор копирования
+    {
+        cout << "Calling copy constructor" << endl;
+        new_memory(other.height, other.width);
+        replace(other);
     }
 
     Matrix& operator=(const Matrix& object) {//операор присваивания
@@ -94,32 +106,14 @@ public:
         if (this == &object) {
             return *this;
         }
-            for (int i = 0; i < height; i++) {
-                delete[] matrix[i];
-            }
-            delete[] matrix;
-
-            height = object.height;
-            width = object.width;
-            matrix = new int* [height];
-            for (int i = 0; i < height; i++) {
-                matrix[i] = new int[width];
-
-            }
-            for (int i = 0; i < height; i++) {
-                for (int j = 0; j < width; j++) {
-                    matrix[i][j] = object.matrix[i][j];
-                }
-            }
+        Delete();
+        new_memory(object.height, object.width);
+        replace(object);
             return *this; //разыменование указателя
     }
 
-
     ~Matrix() {
-        for (int i = 0; i < height; i++) {
-            delete[] matrix[i];
-        }
-        delete[] matrix;
+        Delete();
     }
 };
 
@@ -127,19 +121,19 @@ public:
 int main()
 {
     Matrix a(3, 3);
-    a.Input();
-    a.Output();
+    cin >> a;
+    cout << a;
     unsigned w = a.GetHeight();
     cout << w << endl;
     unsigned h = a.GetWidth();
     cout << h << endl;
-    int b = a.Access_by_index_read(0, 0);
-    cout << b << endl;
     Matrix d(a);
-    d.Output();
-    int c = a.Access_by_index_write(2, 2, 10);
+    cout << d;
     Matrix e;
     e = a;
-    e.Output();
+    cout << e;
+
+    a[0][0] = 10;
+    cout << a;
     return 0;
 }
